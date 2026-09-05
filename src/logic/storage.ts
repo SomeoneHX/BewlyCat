@@ -153,11 +153,13 @@ export const OTHER_PAGE_TOP_BAR_CONFIGS: OtherPageTopBarConfig[] = [
   VideoPageTopBarConfig.ShowOnScroll,
 ]
 // 旧版三档（default/transparent/frostedGlass）沿用 v1.5.x 的遮罩结构与色调判定；
+// progressiveFog 为 v1.7.6 的五层渐进雾化（显式选择才挂载，独立渲染分支）；
 // 实验三档（exp 前缀）走余弦渐变遮罩管线。
 export type TopBarStyle
   = | 'default'
     | 'transparent'
     | 'frostedGlass'
+    | 'progressiveFog'
     | 'expDefault'
     | 'expTransparent'
     | 'expFrostedGlass'
@@ -1348,7 +1350,7 @@ export const settings = useSettingsStorage(originalSettings, {
     if (!validTopBarLogoStyles.includes(record.topBarLogoStyle))
       record.topBarLogoStyle = originalSettings.topBarLogoStyle
 
-    const validTopBarStyles: TopBarStyle[] = ['default', 'transparent', 'frostedGlass', ...experimentalTopBarStyles]
+    const validTopBarStyles: TopBarStyle[] = ['default', 'transparent', 'frostedGlass', 'progressiveFog', ...experimentalTopBarStyles]
     const hasLegacyTopBarStyle = 'alwaysUseTransparentTopBar' in record
       || 'alwaysUseFrostedGlassTopBar' in record
       || 'enableTopBarGradient' in record
