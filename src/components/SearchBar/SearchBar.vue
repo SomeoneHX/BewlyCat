@@ -1097,8 +1097,9 @@ function handleClearKeyword() {
   }
 
   &.search-wrap--top-bar {
-    // 顶栏已承担背景模糊，控件再叠 backdrop-filter 会多占合成层。
-    --b-search-bar-glass: none;
+    // 渐进雾化/毛玻璃会话下还原旧版顶栏视觉：搜索框自带一层玻璃（blur(20px) saturate(180%)），
+    // 与背景渐进雾化叠加出旧版"控件再叠玻璃"的观感。代价是顶栏多占 1 个 backdrop 合成层。
+    --b-search-bar-glass: var(--bew-filter-glass-1);
 
     @media (max-width: 767px) {
       #search-dropdown,
