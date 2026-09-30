@@ -3,8 +3,9 @@ import { useI18n } from 'vue-i18n'
 import { IFRAME_TOP_BAR_CHANGE } from '~/constants/globalEvents'
 import { setUselessFeedCardBlockerEnabled, shouldEnableUselessFeedCardBlocker } from '~/contentScripts/features/blockUselessFeedCards'
 import { LanguageType } from '~/enums/appEnums'
-import { appAuthTokens, FROSTED_GLASS_BLUR_MAX_PX, FROSTED_GLASS_BLUR_MIN_PX, localSettings, originalSettings, settings } from '~/logic'
+import { appAuthTokens, FROSTED_GLASS_BLUR_MAX_PX, FROSTED_GLASS_BLUR_MIN_PX, LIQUID_GLASS_REFRACTION_MAX_PX, LIQUID_GLASS_REFRACTION_MIN_PX, localSettings, originalSettings, settings } from '~/logic'
 import { ensureOriginalBilibiliTopBarAppended, resetBilibiliTopBarInlineStyles, setOriginalBilibiliTopBarScrolled, shouldShowOriginalBilibiliTopBar } from '~/utils/bilibiliTopBar'
+import { refreshLiquidGlass, setLiquidGlassEnabled, setLiquidGlassRefraction } from '~/utils/liquidGlass'
 import { cleanBilibiliShareText, getUserID, injectCSS, isHomePage, isInIframe, isVideoPlaybackPage } from '~/utils/main'
 
 function isFestivalPage(): boolean {
@@ -25,6 +26,15 @@ export function setupNecessarySettingsWatchers() {
     return Math.min(FROSTED_GLASS_BLUR_MAX_PX, Math.max(FROSTED_GLASS_BLUR_MIN_PX, value))
   }
 
+  const DEFAULT_LIQUID_GLASS_REFRACTION_PX = originalSettings.liquidGlassRefraction
+
+  const clampLiquidGlassRefraction = (value: number) => {
+    if (!Number.isFinite(value))
+      return DEFAULT_LIQUID_GLASS_REFRACTION_PX
+
+    return Math.min(LIQUID_GLASS_REFRACTION_MAX_PX, Math.max(LIQUID_GLASS_REFRACTION_MIN_PX, value))
+  }
+
   const applyFrostedGlassBlur = (rawValue: number) => {
     const clampedValue = clampFrostedGlassBlur(rawValue)
     const bewlyElement = document.querySelector('#bewly') as HTMLElement | null
@@ -38,6 +48,7 @@ export function setupNecessarySettingsWatchers() {
         element.style.removeProperty('--bew-filter-glass-1')
         element.style.removeProperty('--bew-filter-glass-2')
       })
+      refreshLiquidGlass()
       return
     }
 
@@ -55,6 +66,9 @@ export function setupNecessarySettingsWatchers() {
         element.style.setProperty('--bew-filter-glass-2', blur2Value)
       }
     })
+
+    // 折射透镜的内联 backdrop-filter 会盖住上面这两个变量，必须重读一遍模糊值。
+    refreshLiquidGlass()
   }
 
   const applyFrostedGlassState = () => {
@@ -189,6 +203,17 @@ export function setupNecessarySettingsWatchers() {
     { immediate: true },
   )
 
+  // 液态玻璃需要一个已有的毛玻璃底，毛玻璃关掉时一并关掉。
+  watch(
+    [() => settings.value.enableFrostedGlass, () => settings.value.enableLiquidGlass],
+    ([frostedGlass, liquidGlass]) => {
+      setLiquidGlassEnabled(Boolean(frostedGlass && liquidGlass), {
+        refractionAmount: clampLiquidGlassRefraction(settings.value.liquidGlassRefraction),
+      })
+    },
+    { immediate: true },
+  )
+
   watch(
     () => settings.value.frostedGlassBlurIntensity,
     (value) => {
@@ -202,6 +227,28 @@ export function setupNecessarySettingsWatchers() {
       applyFrostedGlassBlur(clamped)
     },
     { immediate: true },
+  )
+
+  // 拖动滑杆会连续触发，位移图是逐像素生成的，一帧只重绘一次。
+  let pendingLiquidGlassPaint = 0
+  watch(
+    () => settings.value.liquidGlassRefraction,
+    (value) => {
+      const clamped = clampLiquidGlassRefraction(value)
+
+      if (clamped !== value) {
+        settings.value.liquidGlassRefraction = clamped
+        return
+      }
+
+      if (pendingLiquidGlassPaint)
+        return
+
+      pendingLiquidGlassPaint = requestAnimationFrame(() => {
+        pendingLiquidGlassPaint = 0
+        setLiquidGlassRefraction(clamped)
+      })
+    },
   )
 
   watch(() => settings.value.disableShadow, (newValue) => {

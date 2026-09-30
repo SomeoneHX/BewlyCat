@@ -52,6 +52,11 @@ export const momentsPinnedUsers = useStorageLocal<MomentsWantedUser[]>(
 export const FROSTED_GLASS_BLUR_MIN_PX = 1
 export const FROSTED_GLASS_BLUR_MAX_PX = 20
 
+/** 液态玻璃边缘最大位移（px）。0 等于只保留毛玻璃。 */
+export const LIQUID_GLASS_REFRACTION_MIN_PX = 0
+export const LIQUID_GLASS_REFRACTION_MAX_PX = 60
+export const LIQUID_GLASS_REFRACTION_DEFAULT_PX = 22
+
 // 快捷键基础配置接口
 export interface BaseShortcutSetting {
   key: string
@@ -266,6 +271,10 @@ export interface Settings {
 
   enableFrostedGlass: boolean
   frostedGlassBlurIntensity: number
+  /** 在毛玻璃表面上追加圆角矩形折射；仅 Chromium 生效，默认关闭 */
+  enableLiquidGlass: boolean
+  /** 折射边缘的最大位移（px） */
+  liquidGlassRefraction: number
   /** 分段控件液态滑动指示器；默认关闭以降低切换动画合成成本 */
   enableLiquidSegmentIndicator: boolean
   disableShadow: boolean
@@ -567,6 +576,8 @@ export const originalSettings: Settings = {
 
   enableFrostedGlass: false,
   frostedGlassBlurIntensity: 20,
+  enableLiquidGlass: false,
+  liquidGlassRefraction: LIQUID_GLASS_REFRACTION_DEFAULT_PX,
   enableLiquidSegmentIndicator: false,
   disableShadow: false,
 
@@ -975,6 +986,18 @@ watch(
 
     if (record.frostedGlassBlurIntensity > FROSTED_GLASS_BLUR_MAX_PX)
       record.frostedGlassBlurIntensity = FROSTED_GLASS_BLUR_MAX_PX
+
+    if (typeof record.enableLiquidGlass !== 'boolean')
+      record.enableLiquidGlass = originalSettings.enableLiquidGlass
+
+    if (!Number.isFinite(record.liquidGlassRefraction))
+      record.liquidGlassRefraction = originalSettings.liquidGlassRefraction
+
+    if (record.liquidGlassRefraction < LIQUID_GLASS_REFRACTION_MIN_PX)
+      record.liquidGlassRefraction = LIQUID_GLASS_REFRACTION_MIN_PX
+
+    if (record.liquidGlassRefraction > LIQUID_GLASS_REFRACTION_MAX_PX)
+      record.liquidGlassRefraction = LIQUID_GLASS_REFRACTION_MAX_PX
 
     // Normalize the user-configurable two-column list breakpoint. Older
     // versions used a fixed 640px threshold and do not have this field.

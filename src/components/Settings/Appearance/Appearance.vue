@@ -3,7 +3,7 @@ import { useThrottleFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 
 import Select from '~/components/Select.vue'
-import { FROSTED_GLASS_BLUR_MAX_PX, FROSTED_GLASS_BLUR_MIN_PX, localSettings, settings } from '~/logic'
+import { FROSTED_GLASS_BLUR_MAX_PX, FROSTED_GLASS_BLUR_MIN_PX, LIQUID_GLASS_REFRACTION_MAX_PX, LIQUID_GLASS_REFRACTION_MIN_PX, localSettings, settings } from '~/logic'
 
 import ChangeWallpaper from '../components/ChangeWallpaper.vue'
 import SettingsItem from '../components/SettingsItem.vue'
@@ -170,6 +170,32 @@ function changeWallpaper(url: string) {
             :min="FROSTED_GLASS_BLUR_MIN_PX"
             :max="FROSTED_GLASS_BLUR_MAX_PX"
             :label="`${settings.frostedGlassBlurIntensity}`"
+          />
+        </div>
+      </SettingsItem>
+      <SettingsItem
+        v-if="settings.enableFrostedGlass"
+        :title="$t('settings.enable_liquid_glass')"
+        :badge="$t('settings.badge_performance_impact')"
+        right-width="auto"
+      >
+        <template #desc>
+          <span>{{ $t('settings.enable_liquid_glass_desc') }}</span>
+          <span block class="bew-warning-text">{{ $t('common.performance_impact_warn') }}</span>
+        </template>
+        <Radio v-model="settings.enableLiquidGlass" />
+      </SettingsItem>
+      <SettingsItem
+        v-if="settings.enableLiquidGlass"
+        :title="$t('settings.liquid_glass_refraction')"
+        right-width="auto"
+      >
+        <div class="slider-control">
+          <Slider
+            v-model="settings.liquidGlassRefraction"
+            :min="LIQUID_GLASS_REFRACTION_MIN_PX"
+            :max="LIQUID_GLASS_REFRACTION_MAX_PX"
+            :label="`${settings.liquidGlassRefraction}`"
           />
         </div>
       </SettingsItem>

@@ -402,6 +402,11 @@ settings:
     the indent.
   enable_frosted_glass: Enable frosted glass effect
   frosted_glass_blur_intensity: Frosted glass blur intensity
+  enable_liquid_glass: Enable liquid glass
+  enable_liquid_glass_desc: >
+    Bend the backdrop at the rim of frosted-glass surfaces. Blur intensity follows the slider
+    above. Chromium only, and the settings panel is excluded.
+  liquid_glass_refraction: Liquid glass refraction strength
   enable_liquid_segment_indicator: Enable liquid segment indicator
   enable_liquid_segment_indicator_desc: >
     Use a sliding liquid indicator on segmented controls such as home tabs, layout switcher,

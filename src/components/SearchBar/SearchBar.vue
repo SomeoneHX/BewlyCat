@@ -872,9 +872,7 @@ function handleClearKeyword() {
   @mixin card-content {
     --uno: "text-base outline-none w-full bg-$b-search-bar-normal-color border-1 border-$bew-border-color";
     --uno: "shadow-[var(--bew-shadow-2),var(--bew-shadow-edge-glow-1)]";
-    // --b-search-bar-glass 由外部（如顶栏的 slide-out 过渡）覆盖为恒等滤镜，
-    // 让玻璃与透明度动画同步渐变，避免 Chromium 丢弃 backdrop-filter 造成饱和度跳变
-    backdrop-filter: var(--b-search-bar-glass, var(--bew-filter-glass-1));
+    backdrop-filter: var(--bew-filter-glass-1);
   }
 
   .search-bar {
@@ -897,17 +895,13 @@ function handleClearKeyword() {
       min-width: 0;
       position: relative;
       z-index: 1;
-      border-radius: var(
-        --b-search-bar-radius,
-        calc(var(--b-search-bar-height, var(--bew-top-bar-primary-control-height, 46px)) / 2)
-      );
+      border-radius: calc(var(--b-search-bar-height, var(--bew-top-bar-primary-control-height, 46px)) / 2);
       transition:
         background-color var(--bew-duration-normal) var(--bew-ease-standard),
         color var(--bew-duration-normal) var(--bew-ease-standard),
         opacity var(--bew-duration-normal) var(--bew-ease-standard),
         box-shadow var(--bew-duration-normal) var(--bew-ease-standard),
-        backdrop-filter var(--bew-duration-moderate) var(--bew-ease-standard),
-        border-radius var(--bew-duration-moderate) var(--bew-ease-standard);
+        backdrop-filter var(--bew-duration-moderate) var(--bew-ease-standard);
 
       &::placeholder {
         color: var(--b-search-bar-normal-placeholder-color);
@@ -939,7 +933,6 @@ function handleClearKeyword() {
 
     &.focus input {
       border-color: var(--bew-theme-color);
-      border-radius: var(--bew-radius);
       box-shadow:
         0 0 0 2px var(--bew-theme-color),
         0 6px 16px var(--bew-theme-color-40),
@@ -1097,9 +1090,17 @@ function handleClearKeyword() {
   }
 
   &.search-wrap--top-bar {
-    // 渐进雾化/毛玻璃会话下还原旧版顶栏视觉：搜索框自带一层玻璃（blur(20px) saturate(180%)），
-    // 与背景渐进雾化叠加出旧版"控件再叠玻璃"的观感。代价是顶栏多占 1 个 backdrop 合成层。
-    --b-search-bar-glass: var(--bew-filter-glass-1);
+    // 透镜的 url() 写在元素内联样式里，而含 url() 的滤镜列表不参与插值，
+    // 所以滑出/滑入期间用 !important 让开内联写入，玻璃才能过渡到恒等值。
+    &.slide-out-enter-active input,
+    &.slide-out-leave-active input {
+      backdrop-filter: var(--bew-filter-glass-1) !important;
+    }
+
+    &.slide-out-enter-from input,
+    &.slide-out-leave-to input {
+      backdrop-filter: blur(0px) saturate(100%) !important;
+    }
 
     @media (max-width: 767px) {
       #search-dropdown,
